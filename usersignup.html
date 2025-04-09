@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        @media(max-width:480px){
+            .formtot{
+                padding: 15px;
+            }
+            button{
+                font-size: 14px;
+                padding: 8px;
+            }
+        }
+        body{
+        background-image: url('https://media.tenor.com/W-7Yy2HIAQoAAAAi/music.gif');
+        background-position: center;
+        justify-content: center;
+      align-items: center;
+        display: flex;
+        margin-top: 80px;
+        border: #000;
+        }
+ .formtot{
+border-radius: 8px;
+border: 8px black;
+background-color: rgba(255, 255, 255,0.7);
+padding-left: 20px;
+box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+width: 300px;
+height: 550px;
+}
+button{
+    background-color: rgb(31, 169, 255);
+    color: white;
+    border-radius: 5px;
+    border-color: aliceblue;
+}
+input[type="text"],
+    input[type="password"] {
+      width: 80%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 2px solid #888;
+      border-radius: 8px;
+      background: #fff;
+      color: #000;
+    }
+    </style>
+</head>
+<body>
+    <div class="formtot">
+    <form>
+        <h2>Registration form</h2>
+       <label for="name">Name:</label><br>
+       <input type="text" id="name" placeholder="Enter your name"><br><br>
+       <label for="password">Create Password:</label><br>
+       <input type="text" id="password" placeholder="Create password"><br><br>
+       <label for="password">Confirm Password:</label><br>
+       <input type="text" id="password" placeholder="Confirm password"><br><br>
+       <label><b>User type</b></label><br>
+        <label><input type="radio" name="who" value="Artist"> Artist</label><br>
+        <label><input type="radio" name="who" value="user"> User</label><br><br>
+         <label><b>Language preference</b></label><br>
+         <label><input type="checkbox" value="Telugu">Telugu</label><br>
+         <label><input type="checkbox" value="Hindi">Hindi</label><br>
+         <label><input type="checkbox" value="English">English</label><br>
+         <label><input type="checkbox" value="Malayalam">Malayalam</label><br>
+         <label><input type="radio" name="who" value="Other">Other</label><br><br>
+        <button>Signup</button>
+  
+    </form>
+</div>
+</body>
+</html>

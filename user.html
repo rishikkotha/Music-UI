@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body{
+        background-image: url('https://media.tenor.com/W-7Yy2HIAQoAAAAi/music.gif');
+        background-position: center;
+        justify-content: center;
+      align-items: center;
+        display: flex;
+        margin-top: 200px;
+        border: #000;
+        }
+ .formtot{
+border-radius: 8px;
+border: 8px black;
+background-color: rgba(255, 255, 255,0.7);
+padding-left: 20px;
+box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+width: 300px;
+height: 350px;
+}
+button{
+    background-color: rgb(31, 169, 255);
+    color: white;
+    border-radius: 5px;
+    border-color: aliceblue;
+}
+.display{
+    display: inline;
+}
+input[type="text"],
+    input[type="password"] {
+      width: 80%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 2px solid #888;
+      border-radius: 8px;
+      background: #fff;
+      color: #000;
+    }
+    </style>
+</head>
+<body>
+    <div class="formtot">
+    <form>
+        <h2>Registration form</h2>
+       <label for="name">Name:</label><br>
+       <input type="text" id="name" placeholder="Enter your name"><br><br>
+       <label for="password">Password:</label><br>
+       <input type="text" id="password" placeholder="Enter password"><br><br>
+
+        <label><input type="radio" name="who" value="Artist">Artist</label><br>
+        <label><input type="radio" name="who" value="user"> User</label><br><br>
+     <div class="display">
+        <button>Login</button>
+        <button type="button" onclick="window.location.href='usersignup.html'">Register</button>
+        
+
+    </div>
+    </form>
+</div>
+</body>
+</html>
