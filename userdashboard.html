@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundWave - Music Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Global styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            transition: background 0.5s ease-in-out;
+        }
+
+        #main-app-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .app-screen {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 900px;
+            height: 90vh; /* Increased height */
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            display: none; /* Hidden by default */
+        }
+
+        .app-screen.active {
+            opacity: 1;
+            transform: translateY(0);
+            display: flex;
+        }
+
+        /* Navbar styling */
+        .navbar {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4); /* Slightly darker, semi-transparent */
+            backdrop-filter: blur(15px);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed; /* Fix navbar to the top */
+            top: 0;
+            left: 0;
+            z-index: 1000; /* Ensure it's above other content */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            background: linear-gradient(45deg, #4ecdc4, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #searchBar {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1em;
+            outline: none;
+            width: 300px; /* Adjust width as needed */
+            max-width: 40%;
+        }
+
+        #searchBar::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile-icon {
+            font-size: 1.5em;
+            color: #4ecdc4;
+        }
+
+        .username {
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Player Controls */
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            width: 100%;
+        }
+
+        .current-song-info {
+            display: flex;
+            flex-direction: column; /* Changed to column to stack elements */
+            align-items: center; /* Center horizontally */
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .current-song-cover {
+            width: 100px; /* Increased size */
+            height: 100px; /* Increased size */
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .current-song-details h3 {
+            margin: 0;
+            font-size: 1.3em;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4); /* Gradient for title */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .current-song-details p {
+            margin: 0;
+            font-size: 0.9em;
+            opacity: 0.8;
+            background: linear-gradient(45deg, #a773ff, #ff4c4c); /* Gradient for artist */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .controls-buttons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8em;
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
+
+        .control-btn:hover {
+            color: #4ecdc4;
+            transform: scale(1.1);
+        }
+
+        .control-btn.play-pause {
+            font-size: 2.5em;
+            color: #ff6b6b;
+        }
+        .control-btn.play-pause:hover {
+            color: #ff8e8e;
+        }
+
+        .progress-bar-container {
+            width: 80%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            border-radius: 3px;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        /* Song List Section */
+        .song-list-section {
+            flex: 1;
+            width: 100%;
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: left;
+            max-height: calc(100% - 220px); /* Adjusted height for more song list space */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+
+        .song-list-section h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+            text-align: center;
+        }
+
+        .song-list {
+            list-style: none;
+            padding: 0;
+            display: flex; /* Make it a flex container */
+            flex-wrap: wrap; /* Allow items to wrap to the next line */
+            justify-content: center; /* Center items horizontally */
+            gap: 20px; /* Space between song items */
+        }
+
+        .song-item {
+            display: flex;
+            flex-direction: column; /* Stack items vertically */
+            align-items: center; /* Center content horizontally */
+            width: 150px; /* Fixed width for each song item */
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+            text-align: center; /* Center text within the item */
+        }
+
+        .song-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .song-item.playing {
+            background: linear-gradient(90deg, rgba(78, 205, 196, 0.2), rgba(255, 107, 107, 0.2));
+            border: 1px solid #4ecdc4;
+        }
+
+        .song-cover {
+            width: 120px; /* Adjusted size for better fit */
+            height: 120px; /* Adjusted size for better fit */
+            border-radius: 8px;
+            object-fit: cover;
+            margin-bottom: 10px; /* Space between cover and info */
+        }
+
+        .song-info {
+            flex-grow: 1;
+            width: 100%; /* Ensure info takes full width for centering */
+        }
+
+        .song-info h3 {
+            margin: 0;
+            font-size: 1.1em;
+            background: linear-gradient(45deg, #4ecdc4, #ff6b6b); /* Gradient for title */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .song-info p {
+            margin: 5px 0 0; /* Space between title and artist */
+            font-size: 0.9em;
+            opacity: 0.9;
+            background: linear-gradient(45deg, #a773ff, #ff4c4c); /* Gradient for artist */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .song-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px; /* Space between info and actions */
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .action-btn.favourite-btn.liked {
+            color: #ff6b6b; /* Red for liked */
+        }
+
+        .action-btn:hover {
+            color: #4ecdc4;
+        }
+
+        /* Custom Scrollbar */
+        .song-list-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .song-list-section::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .song-list-section::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .song-list-section::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Playlist Screen */
+        #playlistScreen, #favoritesScreen, #recentlyPlayedScreen {
+            display: none; /* Hidden by default */
+            /* Inherits app-screen styles */
+        }
+
+        .screen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .screen-header h1 {
+            font-size: 2.2em;
+            background: linear-gradient(45deg, #4ecdc4, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: left;
+        }
+
+        .back-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .playlist-list, .favorites-list, .recently-played-list {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .playlist-list li, .favorites-list li, .recently-played-list li {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .playlist-list li:hover, .favorites-list li:hover, .recently-played-list li:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .playlist-song-cover {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+
+        .playlist-item-info {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .playlist-item-info h3 {
+            margin: 0;
+            font-size: 1.1em;
+        }
+
+        .playlist-item-info p {
+            margin: 0;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .playlist-actions button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            margin-left: 10px;
+        }
+        .playlist-actions button:hover {
+            color: #ff6b6b;
+        }
+
+        /* Playlist creation form */
+        #createPlaylistForm {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #newPlaylistName {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1em;
+            outline: none;
+        }
+
+        #newPlaylistName::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        #createPlaylistBtn {
+            padding: 10px 20px;
+            background: linear-gradient(90deg, #4ecdc4, #ff6b6b);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #createPlaylistBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Side Menu */
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            padding-top: 80px; /* Space for fixed navbar */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            z-index: 999;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .side-menu.active {
+            transform: translateX(0);
+        }
+
+        .menu-toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2em;
+            cursor: pointer;
+            z-index: 1001; /* Above side menu */
+            transition: color 0.3s ease;
+        }
+
+        .menu-toggle-btn:hover {
+            color: #4ecdc4;
+        }
+
+        .side-menu-item {
+            width: 100%;
+            padding: 15px 30px;
+            color: white;
+            font-size: 1.1em;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.3s ease, color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .side-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #4ecdc4;
+        }
+
+        .side-menu-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+      <button class="menu-toggle-btn" id="menuToggleBtn">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="logo" style="padding-left: 10px; padding-top: 5px;">SoundWave</div>
+      <input type="text" id="searchBar" placeholder="Search songs..." />
+      <div class="user-profile">
+          <i class="fas fa-user-circle profile-icon"></i>
+          <span class="username" id="username-display">User</span>
+          <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </nav>
+
+    <div class="side-menu" id="sideMenu">
+        <div class="side-menu-item active" id="menuAllSongs"><i class="fas fa-music"></i> All Songs</div>
+        <div class="side-menu-item" id="menuPlaylists"><i class="fas fa-list"></i> Playlists</div>
+        <div class="side-menu-item" id="menuFavorites"><i class="fas fa-heart"></i> Favorites</div>
+        <div class="side-menu-item" id="menuRecentlyPlayed"><i class="fas fa-history"></i> Recently Played</div>
+    </div>
+
+    <div id="main-app-container">
+        <div id="userPlayerScreen" class="app-screen active">
+            <div class="player-controls">
+                <audio id="audioPlayer" controls style="display: none;"></audio>
+                <div class="current-song-info">
+                    <img id="currentSongCover" src="images/default-cover.jpg" alt="Cover" class="current-song-cover">
+                    <div class="current-song-details">
+                        <h3 id="currentSongTitle">Not Playing</h3>
+                        <p id="currentSongArtist">--</p>
+                    </div>
+                </div>
+                <div class="controls-buttons">
+                    <button class="control-btn" id="prevBtn"><i class="fas fa-backward"></i></button>
+                    <button class="control-btn play-pause" id="playPauseBtn"><i class="fas fa-play"></i></button>
+                    <button class="control-btn" id="nextBtn"><i class="fas fa-forward"></i></button>
+                </div>
+                <div class="progress-bar-container" id="progressBarContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="time-display">
+                    <span id="currentTime">0:00</span>
+                    <span id="durationTime">0:00</span>
+                </div>
+            </div>
+
+            <div class="song-list-section">
+                <h2>All Songs</h2>
+                <ul id="songList" class="song-list">
+                    <p style="text-align: center; opacity: 0.7; margin-top: 10px; color: white;">No songs available.</p>
+                </ul>
+            </div>
+        </div>
+
+        <div id="playlistScreen" class="app-screen">
+            <div class="screen-header">
+                <h1>Playlists</h1>
+                <button class="back-button" onclick="showScreen('userPlayerScreen')">Back to All Songs</button>
+            </div>
+            <form id="createPlaylistForm">
+                <input type="text" id="newPlaylistName" placeholder="New playlist name" required>
+                <button type="submit" id="createPlaylistBtn">Create Playlist</button>
+            </form>
+            <ul id="playlistsList" class="playlist-list">
+                <p style="text-align: center; opacity: 0.7; margin-top: 10px; color: white;">No playlists created yet.</p>
+            </ul>
+        </div>
+
+        <div id="favoritesScreen" class="app-screen">
+            <div class="screen-header">
+                <h1>Favorites</h1>
+                <button class="back-button" onclick="showScreen('userPlayerScreen')">Back to All Songs</button>
+            </div>
+            <ul id="favoritesList" class="favorites-list">
+                <p style="text-align: center; opacity: 0.7; margin-top: 10px; color: white;">No favorite songs yet.</p>
+            </ul>
+        </div>
+
+        <div id="recentlyPlayedScreen" class="app-screen">
+            <div class="screen-header">
+                <h1>Recently Played</h1>
+                <button class="back-button" onclick="showScreen('userPlayerScreen')">Back to All Songs</button>
+            </div>
+            <ul id="recentlyPlayedList" class="recently-played-list">
+                <p style="text-align: center; opacity: 0.7; margin-top: 10px; color: white;">No recently played songs yet.</p>
+            </ul>
+        </div>
+
+    </div>
+
+    <script src="music_management.js"></script>
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressBarContainer = document.getElementById('progressBarContainer');
+        const currentTimeSpan = document.getElementById('currentTime');
+        const durationTimeSpan = document.getElementById('durationTime');
+        const currentSongCover = document.getElementById('currentSongCover');
+        const currentSongTitle = document.getElementById('currentSongTitle');
+        const currentSongArtist = document.getElementById('currentSongArtist');
+        const songListElement = document.getElementById('songList');
+
+        const userPlayerScreen = document.getElementById('userPlayerScreen');
+        const playlistScreen = document.getElementById('playlistScreen');
+        const favoritesScreen = document.getElementById('favoritesScreen');
+        const recentlyPlayedScreen = document.getElementById('recentlyPlayedScreen');
+
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const sideMenu = document.getElementById('sideMenu');
+        const menuAllSongs = document.getElementById('menuAllSongs');
+        const menuPlaylists = document.getElementById('menuPlaylists');
+        const menuFavorites = document.getElementById('menuFavorites');
+        const menuRecentlyPlayed = document.getElementById('menuRecentlyPlayed');
+
+        const createPlaylistForm = document.getElementById('createPlaylistForm');
+        const newPlaylistNameInput = document.getElementById('newPlaylistName');
+        const playlistsListElement = document.getElementById('playlistsList');
+        const favoritesListElement = document.getElementById('favoritesList');
+        const recentlyPlayedListElement = document.getElementById('recentlyPlayedList');
+
+
+        let currentPlayingIndex = -1;
+        let allSongs = []; // This will hold all songs available to the user
+
+        // --- Screen Management ---
+        function showScreen(screenId) {
+            document.querySelectorAll('.app-screen').forEach(screen => {
+                screen.classList.remove('active');
+                screen.style.display = 'none'; // Hide physically
+            });
+            document.getElementById(screenId).classList.add('active');
+            document.getElementById(screenId).style.display = 'flex'; // Show physically
+
+            // Update active state in side menu
+            document.querySelectorAll('.side-menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (screenId === 'userPlayerScreen') menuAllSongs.classList.add('active');
+            else if (screenId === 'playlistScreen') menuPlaylists.classList.add('active');
+            else if (screenId === 'favoritesScreen') menuFavorites.classList.add('active');
+            else if (screenId === 'recentlyPlayedScreen') menuRecentlyPlayed.classList.add('active');
+
+            // Close side menu after selection on smaller screens
+            if (window.innerWidth <= 768) {
+                sideMenu.classList.remove('active');
+            }
+        }
+
+        menuToggleBtn.addEventListener('click', () => {
+            sideMenu.classList.toggle('active');
+        });
+
+        // Close side menu if clicked outside
+        document.addEventListener('click', (e) => {
+            if (!sideMenu.contains(e.target) && !menuToggleBtn.contains(e.target) && sideMenu.classList.contains('active')) {
+                sideMenu.classList.remove('active');
+            }
+        });
+
+        menuAllSongs.addEventListener('click', () => {
+            showScreen('userPlayerScreen');
+            allSongs = SoundWave.getSongs(); // Re-fetch all songs when going back to all songs screen
+            renderSongs(allSongs); // Re-render all songs
+        });
+        menuPlaylists.addEventListener('click', () => {
+            showScreen('playlistScreen');
+            renderPlaylists();
+        });
+        menuFavorites.addEventListener('click', () => {
+            showScreen('favoritesScreen');
+            renderFavorites();
+        });
+        menuRecentlyPlayed.addEventListener('click', () => {
+            showScreen('recentlyPlayedScreen');
+            renderRecentlyPlayed();
+        });
+
+
+        // --- Player Functionality ---
+        function loadSong(index) {
+            if (index < 0 || index >= allSongs.length) {
+                console.warn('Invalid song index.');
+                return;
+            }
+            currentPlayingIndex = index;
+            const song = allSongs[currentPlayingIndex];
+
+            audioPlayer.src = song.src;
+            currentSongTitle.textContent = song.title;
+            currentSongArtist.textContent = song.artist;
+            currentSongCover.src = song.cover || 'images/default-cover.jpg'; // Use default cover if not provided
+
+            // Update active song in the list
+            document.querySelectorAll('.song-item').forEach((item, idx) => {
+                item.classList.remove('playing');
+                if (idx === currentPlayingIndex) {
+                    item.classList.add('playing');
+                }
+            });
+
+            // Add to recently played
+            SoundWave.addRecentlyPlayed(song.id);
+
+            playSong();
+        }
+
+        function playSong() {
+            if (audioPlayer.src) {
+                audioPlayer.play();
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            }
+        }
+
+        function pauseSong() {
+            audioPlayer.pause();
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+
+        function togglePlayPause() {
+            if (audioPlayer.paused) {
+                playSong();
+            } else {
+                pauseSong();
+            }
+        }
+
+        function playNextSong() {
+            if (allSongs.length === 0) return;
+            let nextIndex = currentPlayingIndex + 1;
+            if (nextIndex >= allSongs.length) {
+                nextIndex = 0; // Loop back to the first song
+            }
+            loadSong(nextIndex);
+        }
+
+        function playPrevSong() {
+            if (allSongs.length === 0) return;
+            let prevIndex = currentPlayingIndex - 1;
+            if (prevIndex < 0) {
+                prevIndex = allSongs.length - 1; // Loop to the last song
+            }
+            loadSong(prevIndex);
+        }
+
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        prevBtn.addEventListener('click', playPrevSong);
+        nextBtn.addEventListener('click', playNextSong);
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressBar.style.width = progress + '%';
+            currentTimeSpan.textContent = formatTime(audioPlayer.currentTime);
+        });
+
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            durationTimeSpan.textContent = formatTime(audioPlayer.duration);
+        });
+
+        audioPlayer.addEventListener('ended', () => {
+            playNextSong(); // Play next song automatically
+        });
+
+        progressBarContainer.addEventListener('click', (e) => {
+            const width = progressBarContainer.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audioPlayer.duration;
+            audioPlayer.currentTime = (clickX / width) * duration;
+        });
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // --- Song List Rendering ---
+        function renderSongs(songsToRender) {
+            songListElement.innerHTML = '';
+            if (songsToRender.length === 0) {
+                songListElement.innerHTML = '<p style="text-align: center; opacity: 0.7; margin-top: 10px; color: white;">No songs available.</p>';
+                return;
+            }
+
+            songsToRender.forEach((song, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = `song-item ${index === currentPlayingIndex ? 'playing' : ''}`;
+                listItem.dataset.index = index; // Store index for playback
+                listItem.innerHTML = `
+                    <img src="${song.cover || 'images/default-cover.jpg'}" alt="Cover" class="song-cover">
+                    <div class="song-info">
+                        <h3>${song.title}</h3>
+                        <p>${song.artist} - ${song.duration}</p>
+                    </div>
+                    <div class="song-actions">
+                        <button class="action-btn add-to-playlist-btn" data-id="${song.id}" title="Add to Playlist"><i class="fas fa-plus"></i></button>
+                        <button class="action-btn favourite-btn ${SoundWave.isSongLiked(song.id) ? 'liked' : ''}" data-id="${song.id}" title="Toggle Favorite"><i class="fas fa-heart"></i></button>
+                    </div>
+                `;
+                songListElement.appendChild(listItem);
+            });
+
+            // Add click listeners for playing songs
+            document.querySelectorAll('.song-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    // Prevent playing if action button was clicked
+                    if (!e.target.closest('.action-btn')) {
+                        const index = parseInt(item.dataset.index);
+                        loadSong(index);
+                    }
+                });
+            });
+
+            // Add event listeners for action buttons
+            document.querySelectorAll('.add-to-playlist-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent song item click
+                    addToPlaylist(e.currentTarget.dataset.id);
+                });
+            });
+
+            document.querySelectorAll('.favourite-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent song item click
+                    toggleLikeSong(e.currentTarget.dataset.id, button);
+                });
+            });
+        }
+
+        // --- Playlist Management ---
+        createPlaylistForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const playlistName = newPlaylistNameInput.value.trim();
+            if (playlistName) {
+                if (SoundWave.createPlaylist(playlistName)) {
+                    alert(`Playlist "${playlistName}" created!`);
+                    newPlaylistNameInput.value = '';
+                    renderPlaylists();
+                } else {
+                    alert('Playlist already exists or invalid name.');
+                }
+            }
+        });
+
+        function renderPlaylists() {
+            playlistsListElement.innerHTML = '';
+            const playlists = SoundWave.getPlaylists();
+            const allAvailableSongs = SoundWave.getSongs(); // Get all songs to display details
+
+            if (Object.keys(playlists).length === 0) {
+                playlistsListElement.innerHTML = '<p style="text-align: center; opacity: 0.7; margin-top: 10px; color: white;">No playlists created yet.</p>';
+                return;
+            }
+
+            for (const playlistName in playlists) {
+                const playlistSongs = playlists[playlistName].map(songId => allAvailableSongs.find(s => s.id === songId)).filter(Boolean); // Filter out undefined if song not found
+
+                const playlistHeaderContainer = document.createElement('div');
+                playlistHeaderContainer.style.display = 'flex';
+                playlistHeaderContainer.style.justifyContent = 'space-between';
+                playlistHeaderContainer.style.alignItems = 'center';
+                playlistHeaderContainer.style.marginTop = '20px';
+                playlistHeaderContainer.style.marginBottom = '10px';
+                playlistHeaderContainer.style.color = '#4ecdc4';
+                playlistHeaderContainer.innerHTML = `
+                    <h3>${playlistName}</h3>
+                    <button class="action-btn" onclick="deletePlaylist('${playlistName}')" title="Delete Playlist">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+                playlistsListElement.appendChild(playlistHeaderContainer);
+
+
+                if (playlistSongs.length === 0) {
+                    const noSongs = document.createElement('p');
+                    noSongs.style.opacity = '0.7';
+                    noSongs.style.marginLeft = '15px';
+                    noSongs.textContent = 'No songs in this playlist.';
+                    playlistsListElement.appendChild(noSongs);
+                } else {
+                    playlistSongs.forEach(song => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'playlist-item';
+                        listItem.innerHTML = `
+                            <img src="${song.cover || 'images/default-cover.jpg'}" alt="Cover" class="playlist-song-cover">
+                            <div class="playlist-item-info">
+                                <h3>${song.title}</h3>
+                                <p>${song.artist} - ${song.duration}</p>
+                            </div>
+                            <div class="playlist-actions">
+                                <button onclick="removeFromPlaylist('${song.id}', '${playlistName}')" title="Remove from Playlist"><i class="fas fa-minus-circle"></i></button>
+                                <button onclick="playSongFromPlaylist('${song.id}')" title="Play Song"><i class="fas fa-play"></i></button>
+                            </div>
+                        `;
+                        playlistsListElement.appendChild(listItem);
+                    });
+                }
+            }
+        }
+
+        function addToPlaylist(songId) {
+            const playlistName = prompt("Enter playlist name to add this song to:");
+            if (playlistName) {
+                if (SoundWave.addSongToPlaylist(songId, playlistName)) {
+                    alert("Song added to playlist '" + playlistName + "'.");
+                    renderPlaylists(); // Refresh playlist view
+                } else {
+                    alert("Failed to add song to playlist. It might already be in this playlist or the playlist doesn't exist.");
+                }
+            }
+        }
+
+        function removeFromPlaylist(songId, playlistName) {
+            if (confirm(`Are you sure you want to remove this song from "${playlistName}"?`)) {
+                if (SoundWave.removeSongFromPlaylist(songId, playlistName)) {
+                    alert("Song removed from playlist.");
+                    renderPlaylists();
+                } else {
+                    alert("Failed to remove song from playlist.");
+                }
+            }
+        }
+
+        function deletePlaylist(playlistName) {
+            if (confirm(`Are you sure you want to delete the playlist "${playlistName}"? This action cannot be undone.`)) {
+                if (SoundWave.deletePlaylist(playlistName)) {
+                    alert(`Playlist "${playlistName}" deleted successfully!`);
+                    renderPlaylists();
+                } else {
+                    alert(`Failed to delete playlist "${playlistName}".`);
+                }
+            }
+        }
+
+        function playSongFromPlaylist(songId) {
+            const index = allSongs.findIndex(s => s.id === songId);
+            if (index !== -1) {
+                loadSong(index);
+                showScreen('userPlayerScreen'); // Go back to player screen
+            } else {
+                alert('Song not found in available songs.');
+            }
+        }
+
+
+        // --- Favorites Management ---
+        function toggleLikeSong(songId, buttonElement) {
+            if (SoundWave.toggleLikeSong(songId)) {
+                if (buttonElement) {
+                    buttonElement.classList.add('liked');
+                    buttonElement.title = 'Remove from Favorites';
+                }
+                alert("Added to favorites!");
+            } else {
+                if (buttonElement) {
+                    buttonElement.classList.remove('liked');
+                    buttonElement.title = 'Add to Favorites';
+                }
+                alert("Removed from favorites!");
+            }
+            renderFavorites(); // Refresh favorites list if on that screen
+        }
+
+        function renderFavorites() {
+            favoritesListElement.innerHTML = '';
+            const likedSongIds = SoundWave.getLikedSongs();
+            const allAvailableSongs = SoundWave.getSongs();
+
+            if (likedSongIds.length === 0) {
+                favoritesListElement.innerHTML = '<p style="text-align: center; opacity: 0.7; margin-top: 10px; color: white;">No favorite songs yet.</p>';
+                return;
+            }
+
+            [...likedSongIds].reverse().forEach(songId => {
+                const song = allAvailableSongs.find(s => s.id === songId);
+                if (song) {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'favorite-item';
+                    listItem.innerHTML = `
+                        <img src="${song.cover || 'images/default-cover.jpg'}" alt="Cover" class="playlist-song-cover">
+                        <div class="playlist-item-info">
+                            <h3>${song.title}</h3>
+                            <p>${song.artist} - ${song.duration}</p>
+                        </div>
+                        <div class="playlist-actions">
+                            <button onclick="toggleLikeSong('${song.id}', this)" class="action-btn favourite-btn liked" title="Remove from Favorites"><i class="fas fa-heart"></i></button>
+                            <button onclick="playSongFromPlaylist('${song.id}')" title="Play Song"><i class="fas fa-play"></i></button>
+                        </div>
+                    `;
+                    favoritesListElement.appendChild(listItem);
+                }
+            });
+        }
+
+        // --- Recently Played Management ---
+        function renderRecentlyPlayed() {
+            recentlyPlayedListElement.innerHTML = '';
+            const recentlyPlayed = SoundWave.getRecentlyPlayed();
+            const allAvailableSongs = SoundWave.getSongs();
+
+            if (recentlyPlayed.length === 0) {
+                recentlyPlayedListElement.innerHTML = '<p style="text-align: center; opacity: 0.7; margin-top: 10px; color: white;">No recently played songs yet.</p>';
+                return;
+            }
+
+            // Display in reverse order (most recent first)
+            [...recentlyPlayed].reverse().forEach(songId => {
+                const song = allAvailableSongs.find(s => s.id === songId);
+                if (song) {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'recently-played-item';
+                    listItem.innerHTML = `
+                        <img src="${song.cover || 'images/default-cover.jpg'}" alt="Cover" class="playlist-song-cover">
+                        <div class="playlist-item-info">
+                            <h3>${song.title}</h3>
+                            <p>${song.artist} - ${song.duration}</p>
+                        </div>
+                        <div class="playlist-actions">
+                             <button onclick="playSongFromPlaylist('${song.id}')" title="Play Song"><i class="fas fa-play"></i></button>
+                        </div>
+                    `;
+                    recentlyPlayedListElement.appendChild(listItem);
+                }
+            });
+        }
+
+
+        // --- Search functionality ---
+        const searchBar = document.getElementById("searchBar");
+        searchBar.addEventListener("input", function () {
+          const query = this.value.toLowerCase();
+          const filteredSongs = allSongs.filter(song =>
+            song.title.toLowerCase().includes(query) ||
+            song.artist.toLowerCase().includes(query)
+          );
+          renderSongs(filteredSongs);
+        });
+
+        // --- Logout ---
+        function logout() {
+            sessionStorage.removeItem('currentUser'); // Clear session
+            window.location.href = 'loginpageuser.html'; // Redirect to login
+        }
+
+        // --- Initial Load ---
+        window.onload = () => {
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            if (currentUser && currentUser.role === 'user') {
+                userPlayerScreen.classList.add('active'); // Show the player
+                document.getElementById("username-display").textContent = currentUser.username;
+                allSongs = SoundWave.getSongs(); // Load all songs
+                renderSongs(allSongs);
+                if (allSongs.length > 0) {
+                    loadSong(0); // Load the first song by default
+                    pauseSong(); // Start paused
+                }
+            } else {
+                window.location.href = 'loginpageuser.html'; // Redirect if not a user
+            }
+        };
+
+        // Ensure the screen is displayed correctly on DOMContentLoaded
+        document.addEventListener("DOMContentLoaded", () => {
+            const appScreen = document.getElementById("userPlayerScreen");
+            if (appScreen) {
+                appScreen.style.display = "flex";
+            }
+
+            // Optionally: Show username from session
+            const user = JSON.parse(sessionStorage.getItem("currentUser"));
+            if (user && user.username) {
+                document.getElementById("username-display").textContent = user.username;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundWave - Artist Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Global styles - Consistent with main app */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            transition: background 0.5s ease-in-out;
+        }
+
+        /* Main container for the artist dashboard */
+        #main-app-container {
+            width: 100%;
+            /* Changed height to min-height for flexibility */
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Artist Dashboard Screen */
+        .app-screen {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 900px; /* Increased max-width for better layout */
+            width: 100%;
+            display: none; /* Hidden by default */
+            flex-direction: column; /* Changed to column for vertical stacking */
+            gap: 20px; /* Spacing between sections */
+            position: relative;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .app-screen.active {
+            display: flex;
+        }
+
+        h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #4CAF50; /* Green color for emphasis */
+        }
+
+        .artist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .artist-header h2 span {
+            color: #fff;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .logout-button {
+            background: none;
+            border: 2px solid #e74c3c; /* Red border */
+            color: #e74c3c;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background: #e74c3c;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .dashboard-sections {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping for smaller screens */
+            gap: 20px;
+            justify-content: center; /* Center sections when they wrap */
+        }
+
+        .dashboard-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            flex: 1; /* Allow sections to grow and shrink */
+            min-width: 300px; /* Minimum width for each section */
+            text-align: left;
+        }
+
+       .dashboard-section h3 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #ffffff; /* This is the "Admin Dashboard" text color */
+            text-align: center;
+        }
+        /* Form styling */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group input[type="number"],
+        .form-group input[type="file"] { /* Added file input to styling */
+            width: calc(100% - 20px); /* Adjust for padding */
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="url"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group input[type="file"]:focus { /* Added file input to styling */
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        button[type="submit"], .action-button {
+            background: linear-gradient(90deg, #4CAF50 0%, #689F38 100%); /* Green gradient */
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%; /* Make button full width */
+            margin-top: 10px; /* Space from inputs */
+        }
+
+        button[type="submit"]:hover, .action-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0.9;
+        }
+
+        .song-list-container {
+            margin-top: 20px;
+            max-height: 400px; /* Limit height for scrollability */
+            overflow-y: auto; /* Enable vertical scrolling */
+            padding-right: 10px; /* Space for scrollbar */
+        }
+
+        .song-list-container::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .song-list-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .song-list-container::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 10px;
+        }
+
+        .song-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: background 0.3s ease;
+        }
+
+        .song-item:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .song-item img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .song-info {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .song-info h4 {
+            margin: 0;
+            font-size: 1.2em;
+            color: #fff;
+        }
+
+        .song-info p {
+            margin: 5px 0 0;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .song-actions button {
+            background: none;
+            border: none;
+            color: #FFD700; /* Gold for edit */
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .song-actions button.delete-btn {
+            color: #e74c3c; /* Red for delete */
+        }
+
+        .song-actions button:hover {
+            color: #fff;
+        }
+
+        /* Modal for editing song */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 100; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.7); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            margin: auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h3 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 25px;
+        }
+
+        /* Adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .app-screen {
+                padding: 25px;
+            }
+            .artist-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .dashboard-section {
+                min-width: unset; /* Remove min-width to allow full flexibility */
+                width: 100%; /* Take full width on small screens */
+            }
+        }
+    </style>
+    <script src="music_management.js"></script>
+</head>
+<body>
+    <div id="main-app-container">
+        <div id="artistDashboardScreen" class="app-screen">
+            <div class="artist-header">
+                <h2>Welcome, <span id="artist-username-display"></span>!</h2>
+                <button class="logout-button" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="dashboard-sections">
+                <div class="dashboard-section">
+                    <h3>Upload New Song</h3>
+                    <form id="addSongForm">
+                        <div class="form-group">
+                            <label for="songTitle">Title:</label>
+                            <input type="text" id="songTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="songArtist">Artist Name:</label>
+                            <input type="text" id="songArtist" required readonly> </div>
+                        <div class="form-group">
+                            <label for="songFile">Upload Song File (from device):</label>
+                            <input type="file" id="songFile" accept="audio/*">
+                        </div>
+                        <p style="text-align: center; margin: 10px 0; color: rgba(255, 255, 255, 0.7);">OR</p>
+                        <div class="form-group">
+                            <label for="songSrcURL">Paste Song File URL:</label>
+                            <input type="url" id="songSrcURL">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="coverFile">Upload Cover Image (from device):</label>
+                            <input type="file" id="coverFile" accept="image/*">
+                        </div>
+                        <p style="text-align: center; margin: 10px 0; color: rgba(255, 255, 255, 0.7);">OR</p>
+                        <div class="form-group">
+                            <label for="songCover">Paste Cover Image URL:</label>
+                            <input type="url" id="songCover">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="songDuration">Duration (e.g., 3:45):</label>
+                            <input type="text" id="songDuration" placeholder="MM:SS" required>
+                        </div>
+                        <button type="submit">Upload Song</button>
+                    </form>
+                </div>
+
+                <div class="dashboard-section">
+                    <h3>My Uploaded Songs</h3>
+                    <div id="artistSongsList" class="song-list-container">
+                        <p>No songs uploaded yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editSongModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeEditModal()">&times;</span>
+            <h3>Edit Song</h3>
+            <form id="editSongForm">
+                <input type="hidden" id="editSongId">
+                <div class="form-group">
+                    <label for="editSongTitle">Title:</label>
+                    <input type="text" id="editSongTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editSongArtist">Artist Name:</label>
+                    <input type="text" id="editSongArtist" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="editSongSrc">Song File URL:</label>
+                    <input type="url" id="editSongSrc" required>
+                </div>
+                <div class="form-group">
+                    <label for="editSongCover">Cover Image URL:</label>
+                    <input type="url" id="editSongCover" required>
+                </div>
+                <div class="form-group">
+                    <label for="editSongDuration">Duration (e.g., 3:45):</label>
+                    <input type="text" id="editSongDuration" placeholder="MM:SS" required>
+                </div>
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentArtistId = ''; // Variable to store the current artist's ID
+
+        const artistDashboardScreen = document.getElementById('artistDashboardScreen');
+        const artistUsernameDisplay = document.getElementById('artist-username-display');
+        const songArtistInput = document.getElementById('songArtist');
+        const editSongArtistInput = document.getElementById('editSongArtist'); // For the edit modal
+
+        // Get references to both song source inputs
+        const songFileInput = document.getElementById('songFile');
+        const songSrcURLInput = document.getElementById('songSrcURL');
+
+        // NEW: Get references to both cover image inputs
+        const coverFileInput = document.getElementById('coverFile');
+        const songCoverInput = document.getElementById('songCover'); // This was already defined
+
+
+        // --- Functions for managing songs ---
+
+        function renderArtistSongs(filter = '') {
+            const artistSongsList = document.getElementById('artistSongsList');
+            artistSongsList.innerHTML = ''; // Clear existing list
+
+            const allSongs = SoundWave.getSongs(); // Get all songs
+
+            console.log("artistdashboard.html: renderArtistSongs - Current artist ID for filtering:", currentArtistId);
+            console.log("artistdashboard.html: renderArtistSongs - All songs retrieved:", allSongs);
+
+            // Filter songs by the current artist's ID
+            const artistSongs = allSongs.filter(song => song.artistId === currentArtistId);
+
+            console.log("artistdashboard.html: renderArtistSongs - Songs filtered for this artist:", artistSongs);
+
+
+            if (artistSongs.length === 0) {
+                artistSongsList.innerHTML = '<p>No songs uploaded yet.</p>';
+                return;
+            }
+
+            artistSongs.forEach(song => {
+                const songItem = document.createElement('div');
+                songItem.className = 'song-item';
+                songItem.innerHTML = `
+                    <img src="${song.cover}" alt="${song.title} Cover">
+                    <div class="song-info">
+                        <h4>${song.title}</h4>
+                        <p>${song.artist} • ${song.duration}</p>
+                    </div>
+                    <div class="song-actions">
+                        <button onclick="openEditModal('${song.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="delete-btn" onclick="deleteArtistSong('${song.id}')"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                `;
+                artistSongsList.appendChild(songItem);
+            });
+        }
+
+        function openEditModal(songId) {
+            const song = SoundWave.getSongs().find(s => s.id === songId);
+            if (song) {
+                document.getElementById('editSongId').value = song.id;
+                document.getElementById('editSongTitle').value = song.title;
+                document.getElementById('editSongArtist').value = song.artist;
+                document.getElementById('editSongSrc').value = song.src; // This will show the object URL or actual URL
+                document.getElementById('editSongCover').value = song.cover; // This will show the object URL or actual URL
+                document.getElementById('editSongDuration').value = song.duration;
+                document.getElementById('editSongModal').style.display = 'flex'; // Show modal
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editSongModal').style.display = 'none'; // Hide modal
+        }
+
+        const editSongForm = document.getElementById('editSongForm');
+        editSongForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const updatedSong = {
+                id: document.getElementById('editSongId').value,
+                title: document.getElementById('editSongTitle').value,
+                artist: document.getElementById('editSongArtist').value,
+                src: document.getElementById('editSongSrc').value, // Use the current value (object URL or actual URL)
+                cover: document.getElementById('editSongCover').value, // Use the current value (object URL or actual URL)
+                duration: document.getElementById('editSongDuration').value,
+                artistId: currentArtistId // Ensure artistId is maintained
+            };
+
+            if (SoundWave.updateSong(updatedSong)) {
+                alert('Song updated successfully!');
+                closeEditModal();
+                renderArtistSongs(); // Re-render the list
+            } else {
+                alert('Failed to update song.');
+            }
+        });
+
+        function deleteArtistSong(songId) {
+            if (confirm('Are you sure you want to delete this song?')) {
+                if (SoundWave.deleteSong(songId)) {
+                    alert('Song deleted successfully!');
+                    renderArtistSongs(); // Re-render the list
+                } else {
+                    alert('Failed to delete song.');
+                }
+            }
+        }
+
+        // --- Event Listener for Add Song Form ---
+        const addSongForm = document.getElementById('addSongForm');
+        addSongForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const songTitleInput = document.getElementById('songTitle');
+            const songArtistInput = document.getElementById('songArtist');
+            const songDurationInput = document.getElementById('songDuration');
+
+            // Logic for Song Source (File or URL)
+            const songFile = songFileInput.files[0];
+            const songURL = songSrcURLInput.value.trim();
+            let finalSongSrc = '';
+            let songUploadMessage = '';
+
+            if (songFile) {
+                finalSongSrc = URL.createObjectURL(songFile);
+                songUploadMessage = 'Song uploaded successfully! (Note: This is a temporary local file, it will not persist after refresh/close)';
+            } else if (songURL) {
+                finalSongSrc = songURL;
+                songUploadMessage = 'Song uploaded successfully via URL!';
+            } else {
+                alert('Please select a song file OR paste a song file URL.');
+                return; // Stop the submission
+            }
+
+            // NEW Logic for Cover Image Source (File or URL)
+            const coverFile = coverFileInput.files[0];
+            const coverURL = songCoverInput.value.trim();
+            let finalCoverSrc = '';
+            let coverUploadMessage = '';
+
+            if (coverFile) {
+                finalCoverSrc = URL.createObjectURL(coverFile);
+                coverUploadMessage = 'Cover image uploaded via file. (Temporary local file)';
+            } else if (coverURL) {
+                finalCoverSrc = coverURL;
+                coverUploadMessage = 'Cover image uploaded via URL.';
+            } else {
+                alert('Please select a cover image file OR paste a cover image URL.');
+                return; // Stop the submission
+            }
+
+
+            const newSong = {
+                id: 'song_' + Date.now(), // Simple ID generation
+                title: songTitleInput.value,
+                artist: songArtistInput.value,
+                src: finalSongSrc, // Use the determined song source
+                cover: finalCoverSrc, // Use the determined cover source
+                duration: songDurationInput.value,
+                artistId: currentArtistId // Crucial for filtering by artist
+            };
+
+            console.log("artistdashboard.html: addSongForm - Attempting to add new song with data:", newSong);
+
+            if (SoundWave.addSong(newSong)) {
+                alert(`${songUploadMessage}\n${coverUploadMessage}`);
+                addSongForm.reset();
+                renderArtistSongs(); // Re-render the list after successful upload
+                console.log("artistdashboard.html: addSongForm - Song added successfully. Re-rendering artist songs.");
+            } else {
+                alert('Failed to upload song.');
+                console.error("artistdashboard.html: addSongForm - Failed to add song.");
+            }
+        });
+
+
+        // --- Logout Function ---
+        function logout() {
+            sessionStorage.removeItem('currentUser'); // Clear session
+            window.location.href = 'loginpageuser.html'; // Redirect to login
+        }
+
+        // Initial load for artist dashboard
+        window.onload = () => {
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            if (currentUser && currentUser.role === 'artist') {
+                artistDashboardScreen.classList.add('active'); // Show the dashboard
+                artistUsernameDisplay.textContent = currentUser.username;
+                currentArtistId = currentUser.username; // Use username as a simple artist ID
+
+                // Pre-fill artist name in upload form
+                songArtistInput.value = currentArtistId;
+                editSongArtistInput.value = currentArtistId; // Also for edit modal
+
+                // Clear any pre-filled values for file/URL inputs on load to ensure fresh state
+                songFileInput.value = '';
+                songSrcURLInput.value = '';
+                coverFileInput.value = '';
+                songCoverInput.value = '';
+
+                renderArtistSongs(); // Display uploaded songs
+            } else {
+                window.location.href = 'loginpageuser.html'; // Redirect to login if not artist
+            }
+        };
+
+        // Ensure the screen is displayed correctly on DOMContentLoaded
+        document.addEventListener("DOMContentLoaded", () => {
+            const appScreen = document.getElementById("artistDashboardScreen");
+            if (appScreen) {
+                appScreen.style.display = "flex";
+            }
+
+            const user = JSON.parse(sessionStorage.getItem("currentUser"));
+            if (user && user.username) {
+                document.getElementById("artist-username-display").textContent = user.username;
+            }
+        });
+    </script>
+</body>
+</html>

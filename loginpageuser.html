@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundWave - Authentication</title>
+    <style>
+        /* Global styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif; /* Changed to Inter for consistency */
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column; /* Changed to column to accommodate navbar at the top */
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            transition: background 0.5s ease-in-out; /* Smooth background transition */
+        }
+
+        /* Navbar styling */
+        .navbar {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4); /* Slightly darker, semi-transparent */
+            backdrop-filter: blur(15px);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed; /* Keep navbar at the top */
+            top: 0;
+            left: 0;
+            z-index: 1000; /* Ensure it's above other content */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .navbar .navbar-brand {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .navbar .navbar-brand:hover {
+            opacity: 0.8;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        .navbar-nav .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            padding: 5px 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            transition: width 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover::after,
+        .navbar-nav .nav-link.active::after {
+            width: 100%;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #4ecdc4; /* Highlight color on hover */
+        }
+
+        /* Container for the entire application (auth, dashboard, player) */
+        #main-app-container {
+            width: 100%;
+            height: 100%;
+            display: flex; /* Use flex to center content in sub-screens */
+            align-items: center;
+            justify-content: center;
+            padding: 20px; /* Add some padding for smaller screens */
+            padding-top: 100px; /* Adjust padding to make space for the fixed navbar */
+            flex-grow: 1; /* Allow container to take available space */
+        }
+
+        /* Authentication Container */
+        .auth-container {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+
+        .auth-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Logo styling */
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 32px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            opacity: 0.8;
+            font-size: 16px;
+        }
+
+        /* Auth Tabs styling */
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        /* Role Selector styling */
+        .role-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .role-option {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .role-option:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .role-option.selected {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .role-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .role-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .role-desc {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Form Group styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.2);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Password container styling */
+        .password-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Checkbox styling */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .checkbox:checked {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-color: #ff6b6b;
+        }
+
+        .checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            opacity: 0.9;
+            cursor: pointer;
+        }
+
+        /* Submit Button styling */
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Divider styling */
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 30px 0;
+            opacity: 0.6;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .divider span {
+            padding: 0 20px;
+            font-size: 14px;
+        }
+
+        /* Social Login styling */
+        .social-login {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 20px;
+        }
+
+        .social-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Footer styling */
+        .auth-footer {
+            text-align: center;
+            margin-top: 25px;
+            opacity: 0.8;
+        }
+
+        .auth-link {
+            color: #4ecdc4;
+            text-decoration: none;
+            font-weight: 500;
+            margin: 0 5px; /* Add some spacing */
+        }
+
+        .auth-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Form content visibility */
+        .form-content {
+            display: none;
+        }
+
+        .form-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Fade-in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Message styling */
+        .success-message {
+            background: rgba(78, 205, 196, 0.2);
+            border: 1px solid #4ecdc4;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid #ff6b6b;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        /* Artist-specific features styling */
+        .artist-features {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .artist-features.show {
+            display: block;
+        }
+
+        .features-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4ecdc4;
+        }
+
+        .features-list {
+            list-style: none;
+            font-size: 14px;
+        }
+
+        .features-list li {
+            padding: 5px 0;
+            opacity: 0.9;
+        }
+
+        .features-list li::before {
+            content: '✨ ';
+            margin-right: 8px;
+        }
+
+        /* App Screen (for dashboards/player/about/contact) styling - Kept here for About/Contact screens linked from Auth */
+        .app-screen {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 900px; /* Wider for dashboards */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .app-screen .dashboard-header, .app-screen .player-header, .app-screen .about-header, .app-screen .contact-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .app-screen .dashboard-grid, .app-screen .player-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .app-screen .card {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px; /* Add margin for cards */
+        }
+        
+        .app-screen h3 {
+            color: #4ecdc4;
+            margin-bottom: 15px;
+        }
+
+        .app-screen .list-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .app-screen .list-item-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 20px;
+        }
+
+        .app-screen .list-item-content {
+            flex: 1;
+        }
+
+        .app-screen .list-item-actions button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .app-screen .list-item-actions button.delete {
+            background: rgba(255,107,107,0.3);
+        }
+
+        .app-screen .logout-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        .app-screen button {
+            transition: all 0.2s ease;
+        }
+
+        .app-screen button:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        /* Social media links styling on contact page */
+        .social-link-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            text-decoration: none; /* Remove underline by default */
+            color: white; /* Ensure text color is white */
+        }
+
+        .social-link-item:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .social-link-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            color: #4ecdc4; /* Icon color */
+        }
+
+        /* Search bar styling */
+        .search-bar-container {
+            margin-top: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            padding-right: 40px; /* Space for icon */
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 18px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 15px 20px;
+                gap: 15px;
+            }
+
+            .navbar-nav {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .app-screen {
+                max-width: 100%;
+                margin: 20px;
+                padding: 30px 20px;
+            }
+
+            .app-screen .dashboard-grid, .app-screen .player-grid {
+                grid-template-columns: 1fr; /* Stack columns on smaller screens */
+            }
+
+            .app-screen .list-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .app-screen .list-item-icon {
+                margin-bottom: 10px;
+            }
+
+            .app-screen .list-item-actions {
+                margin-top: 10px;
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
+            }
+
+            .app-screen .dashboard-header, .app-screen .player-header, .app-screen .about-header, .app-screen .contact-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+            
+            .role-selector {
+                flex-direction: column;
+            }
+            
+            .social-login {
+                flex-direction: column;
+            }
+        }
+
+        /* Animations */
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="#" class="navbar-brand" onclick="showScreen(authScreen); switchTab('login')">🎵 SoundWave</a>
+        <div class="navbar-nav">
+            <a href="#" class="nav-link" onclick="window.location.href='?screen=about'">About Us</a>
+            <a href="#" class="nav-link" onclick="window.location.href='?screen=contact'">Contact Us</a>
+            <a href="#" class="nav-link" onclick="switchTab('login')">Login</a>
+            <a href="#" class="nav-link" onclick="switchTab('signup')">Sign Up</a>
+        </div>
+    </nav>
+
+    <div id="main-app-container">
+        <div class="auth-container floating" id="authScreen">
+            <div class="logo">
+                <h1>🎵 SoundWave</h1>
+                <p>Your music, your way</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="tab-btn active" data-tab="login">Login</button>
+                <button class="tab-btn" data-tab="signup">Sign Up</button>
+            </div>
+
+            <div class="success-message" id="successMessage"></div>
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="form-content active" id="loginForm">
+                <div class="role-selector">
+                    <div class="role-option selected" data-role="user">
+                        <div class="role-icon">🎧</div>
+                        <div class="role-title">Listener</div>
+                        <div class="role-desc">Enjoy music</div>
+                    </div>
+                    <div class="role-option" data-role="artist">
+                        <div class="role-icon">🎤</div>
+                        <div class="role-title">Artist</div>
+                        <div class="role-desc">Share your music</div>
+                    </div>
+                </div>
+
+                <form id="loginFormSubmit">
+                    <div class="form-group">
+                        <label class="form-label">Email or Username</label>
+                        <input type="text" class="form-input" name="username" placeholder="Enter your email or username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div class="password-container">
+                            <input type="password" class="form-input password-field" name="password" minlength="8" placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword(this)">👁</button>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" class="checkbox" id="rememberMe">
+                        <label for="rememberMe" class="checkbox-label">Remember me</label>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Login to SoundWave</button>
+                </form>
+
+                <div class="auth-footer">
+                    Don't have an account? <a href="#" class="auth-link" onclick="switchTab('signup')">Sign up here</a><br>
+                    <a href="#" class="auth-link">Forgot your password?</a><br>
+                   <a href="#" class="auth-link" onclick="window.location.href='?screen=about'">About SoundWave</a>
+                   <a href="#" class="auth-link" onclick="window.location.href='?screen=contact'">Contact Us</a>
+
+                </div>
+            </div>
+
+            <div class="form-content" id="signupForm">
+                <div class="role-selector">
+                    <div class="role-option selected" data-role="user">
+                        <div class="role-icon">🎧</div>
+                        <div class="role-title">Listener</div>
+                        <div class="role-desc">Discover & enjoy</div>
+                    </div>
+                    <div class="role-option" data-role="artist">
+                        <div class="role-icon">🎤</div>
+                        <div class="role-title">Artist</div>
+                        <div class="role-desc">Upload & share</div>
+                    </div>
+                </div>
+
+                <form id="signupFormSubmit">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-input" name="fullName" placeholder="Enter your full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-input" name="email" placeholder="Enter your email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-input" name="username" placeholder="Choose a username" required>
+                    </div>
+
+                    <div id="artistFields" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Artist/Band Name</label>
+                            <input type="text" class="form-input" name="artistName" placeholder="Your stage name or band name">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Genre</label>
+                            <select class="form-input" name="genre">
+                                <option value="">Select your primary genre</option>
+                                <option value="pop">Pop</option>
+                                <option value="rock">Rock</option>
+                                <option value="hiphop">Hip Hop</option>
+                                <option value="electronic">Electronic</option>
+                                <option value="jazz">Jazz</option>
+                                <option value="classical">Classical</option>
+                                <option value="country">Country</option>
+                                <option value="r&b">R&B</option>
+                                <option value="indie">Indie</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div class="password-container">
+                            <input type="password" class="form-input password-field" name="password" minlength="8" placeholder="Create a strong password" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword(this)">👁</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <div class="password-container">
+                            <input type="password" class="form-input password-field" name="confirmPassword" minlength="8" placeholder="Confirm your password" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword(this)">👁</button>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" class="checkbox" id="agreeTerms" required>
+                        <label for="agreeTerms" class="checkbox-label">I agree to the <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a></label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" class="checkbox" id="newsletter">
+                        <label for="newsletter" class="checkbox-label">Subscribe to newsletter for updates and new features</label>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Create Account</button>
+                </form>
+
+                <div class="artist-features" id="artistFeatures">
+                    <div class="features-title">Artist Benefits:</div>
+                    <ul class="features-list">
+                        <li>Upload unlimited tracks</li>
+                        <li>Advanced analytics dashboard</li>
+                        <li>Fan engagement tools</li>
+                        <li>Revenue sharing program</li>
+                        <li>Promotional opportunities</li>
+                    </ul>
+                </div>
+
+                <div class="auth-footer">
+                    Already have an account? <a href="#" class="auth-link" onclick="switchTab('login')">Login here</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-screen" id="aboutScreen">
+            <div class="about-header">
+                <div>
+                    <h1 style="background: linear-gradient(45deg, #4ecdc4, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 24px;">ℹ️ About SoundWave</h1>
+                    <p style="opacity: 0.8;">Learn more about our music player UI.</p>
+                </div>
+                <button onclick="window.location.href='loginpageuser.html'" class="logout-btn">Back to Login</button>
+            </div>
+
+            <div class="card">
+                <h3>Our Theme: Music Player UI</h3>
+                <p style="opacity: 0.9; line-height: 1.6;">
+                    SoundWave is designed to provide a seamless and engaging experience for both music listeners and artists. 
+                    Our user interface prioritizes ease of use, aesthetic appeal, and powerful features, ensuring that music 
+                    discovery and sharing are intuitive and enjoyable. We aims to create a vibrant platform where creativity 
+                    and consumption of music thrive.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>The Creators</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin-bottom: 10px; opacity: 0.9;"><strong>NAINIKA CHELIKANI</strong></li>
+                    <li style="margin-bottom: 10px; opacity: 0.9;"><strong>RISHIK KOTHA</strong></li>
+                    <li style="margin-bottom: 10px; opacity: 0.9;"><strong>SAI SUMITH</strong></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Our Purpose</h3>
+                <p style="opacity: 0.9; line-height: 1.6;">
+                    The core purpose of SoundWave is to empower artists to share their creations with a wider audience 
+                    and to provide listeners with a diverse and rich musical landscape. We believe in fostering a community 
+                    where music lovers and creators can connect, interact, and grow together. Our platform is built to 
+                    simplify the music experience, from uploading and managing tracks to discovering new artists and genres.
+                </p>
+            </div>
+        </div>
+
+        <div class="app-screen" id="contactScreen">
+            <div class="contact-header">
+                <div>
+                    <h1 style="background: linear-gradient(45deg, #4ecdc4, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 24px;">📧 Contact Us</h1>
+                    <p style="opacity: 0.8;">Connect with the creators of SoundWave.</p>
+                </div>
+                <button onclick="window.location.href='loginpageuser.html'" class="logout-btn">Back to Login</button>
+            </div>
+
+            <div class="card">
+                <h3>Social Media Links</h3>
+                <p style="opacity: 0.9; margin-bottom: 20px;">Feel free to reach out to our creators on their social media platforms:</p>
+                
+                <a href="https://www.instagram.com/__rishik_x?igsh=MTdpYnVuN3ZmbHhodg==" target="_blank" class="social-link-item">
+                    <span class="social-link-icon">📸</span>
+                    <div>
+                        <h4>Rishik Kotha</h4>
+                        <p style="opacity: 0.7; font-size: 14px;">Instagram: @__rishik_x</p>
+                    </div>
+                </a>
+
+                <a href="https://www.instagram.com/nainika_chelikani07?igsh=dWNsZXA0N241bm13" target="_blank" class="social-link-item">
+                    <span class="social-link-icon">📸</span>
+                    <div>
+                        <h4>Nainika Chelikani</h4>
+                        <p style="opacity: 0.7; font-size: 14px;">Instagram: @nainika_chelikani07</p>
+                    </div>
+                </a>
+
+                <a href="https://www.instagram.com/sumith.1008?igsh=am82MXJvZmYwd3Zx" target="_blank" class="social-link-item">
+                    <span class="social-link-icon">📸</span>
+                    <div>
+                        <h4>Sai Sumith</h4>
+                        <p style="opacity: 0.7; font-size: 14px;">Instagram: @sumith.1008</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global references to main screens
+        const authScreen = document.getElementById('authScreen');
+        const aboutScreen = document.getElementById('aboutScreen'); 
+        const contactScreen = document.getElementById('contactScreen'); 
+
+        // Function to show a specific screen and hide others
+        function showScreen(screenToShow) {
+            authScreen.style.display = 'none';
+            aboutScreen.style.display = 'none';
+            contactScreen.style.display = 'none'; 
+            screenToShow.style.display = 'block';
+            // Also ensure auth-container's floating animation restarts if applicable
+            if (screenToShow === authScreen) {
+                authScreen.classList.add('floating');
+            } else {
+                authScreen.classList.remove('floating');
+            }
+        }
+
+        // Tab switching functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                switchTab(tab);
+            });
+        });
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tab === tab) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Update form content
+            document.querySelectorAll('.form-content').forEach(form => {
+                form.classList.remove('active');
+            });
+            document.getElementById(tab + 'Form').classList.add('active');
+
+            // Clear messages
+            clearMessages();
+
+            // Ensure auth screen is visible when switching tabs within auth
+            showScreen(authScreen);
+        }
+
+        // Role selection functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.role-option')) {
+                const roleOption = e.target.closest('.role-option');
+                const container = roleOption.parentElement;
+                const role = roleOption.dataset.role;
+
+                // Update selected role
+                container.querySelectorAll('.role-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+                roleOption.classList.add('selected');
+
+                // Show/hide artist specific fields in signup form
+                const artistFields = document.getElementById('artistFields');
+                const artistFeatures = document.getElementById('artistFeatures');
+                
+                // Only act if we are on the signup form
+                if (container.closest('#signupForm')) {
+                    if (role === 'artist') {
+                        artistFields.style.display = 'block';
+                        artistFeatures.classList.add('show');
+                    } else {
+                        artistFields.style.display = 'none';
+                        artistFeatures.classList.remove('show');
+                    }
+                }
+            }
+        });
+
+        // Password toggle functionality
+        function togglePassword(button) {
+            const passwordField = button.previousElementSibling;
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            button.textContent = type === 'password' ? '👁' : '✖'; 
+        }
+
+        // Display messages (success/error)
+        function showMessage(type, message) {
+            const successDiv = document.getElementById('successMessage');
+            const errorDiv = document.getElementById('errorMessage');
+
+            successDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+
+            if (type === 'success') {
+                successDiv.textContent = message;
+                successDiv.style.display = 'block';
+            } else if (type === 'error') {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Clear messages
+        function clearMessages() {
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Form submission handlers
+        document.getElementById('loginFormSubmit').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const selectedRole = document.querySelector('#loginForm .role-option.selected').dataset.role;
+            const username = formData.get('username');
+            const password = formData.get('password');
+            
+            // Basic validation
+            if (!username || !password) {
+                showMessage('error', 'Please fill in all fields!');
+                return;
+            }
+
+            // Store user session data (simulated)
+            const userData = {
+                username: username,
+                role: selectedRole,
+                loginTime: new Date().toISOString()
+            };
+            
+            // For a real application, you'd send this to a server for authentication.
+            // For this demo, we store it in sessionStorage and redirect.
+            sessionStorage.setItem('currentUser', JSON.stringify(userData));
+            
+            showMessage('success', `Welcome back! Logging in as ${selectedRole}...`);
+            
+            setTimeout(() => {
+                // Redirect based on role
+                if (selectedRole === 'artist') {
+                    window.location.href = 'artistdashboard.html';
+                } else {
+                    window.location.href = 'userdashboard.html';
+                }
+            }, 2000);
+        });
+
+        document.getElementById('signupFormSubmit').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const selectedRole = document.querySelector('#signupForm .role-option.selected').dataset.role;
+            
+            // Validate passwords match
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+            
+            if (password !== confirmPassword) {
+                showMessage('error', 'Passwords do not match!');
+                return;
+            }
+
+            // Validate password strength
+            if (password.length < 8) {
+                showMessage('error', 'Password must be at least 8 characters long!');
+                return;
+            }
+
+            // Create user data (simulated)
+            const userData = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                fullName: formData.get('fullName'),
+                role: selectedRole,
+                artistName: formData.get('artistName') || '',
+                genre: formData.get('genre') || '',
+                signupTime: new Date().toISOString()
+            };
+
+            // For a real application, you'd send this to a server to create the user.
+            // For this demo, we store it in sessionStorage and redirect.
+            sessionStorage.setItem('currentUser', JSON.stringify(userData));
+
+            showMessage('success', `Account created successfully! Welcome to SoundWave as a ${selectedRole}!`);
+            
+            setTimeout(() => {
+                // Redirect based on role
+                if (selectedRole === 'artist') {
+                    window.location.href = 'artistdashboard.html';
+                } else {
+                    window.location.href = 'userdashboard.html';
+                }
+            }, 2000);
+        });
+
+        // Initial setup on page load: ensure only auth screen is visible
+        window.onload = () => {
+            // Check if we navigated from About/Contact, if so, display them
+            const urlParams = new URLSearchParams(window.location.search);
+            const screen = urlParams.get('screen');
+            if (screen === 'about') {
+                showScreen(aboutScreen);
+            } else if (screen === 'contact') {
+                showScreen(contactScreen);
+            } else {
+                showScreen(authScreen);
+            }
+        };
+
+        // Update auth-link to redirect to specific screens with query parameters
+      document.querySelector('.auth-footer a[onclick*="About SoundWave"]').onclick = function(e) {
+            e.preventDefault(); // Prevent default link behavior
+            window.location.href = '?screen=about'; // Loads the 'about' screen within loginpageuser.html
+        };
+        document.querySelector('.auth-footer a[onclick*="Contact Us"]').onclick = function(e) {
+            e.preventDefault(); // Prevent default link behavior
+            window.location.href = '?screen=contact'; // Loads the 'contact' screen within loginpageuser.html
+        };
+    </script>
+</body>
+</html>
